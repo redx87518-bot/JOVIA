@@ -6,11 +6,12 @@ import { SectionHeading } from "@/components/SectionHeading";
 import { Button } from "@/components/ui/button";
 
 /* Public sample clips used as placeholder video content until the real
-   celebrity/games media library is connected. They play inline with no
-   external player scripts and degrade gracefully when offline. */
+   celebrity/games media library is connected. The old gtv-videos-bucket
+   samples now return 403, so we use stable test MP4s that play inline with
+   no external player scripts and degrade gracefully when offline. */
 const SAMPLE_CLIPS = [
-  "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
-  "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+  "https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4",
+  "https://test-videos.co.uk/vids/jellyfish/mp4/h264/360/Jellyfish_360_10s_1MB.mp4",
 ];
 
 interface Showcase {

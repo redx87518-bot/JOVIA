@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { useMutation, useQuery } from "convex/react";
 import {
   BadgeCheck,
   Banknote,
@@ -16,44 +15,53 @@ import {
   Wallet as WalletIcon,
 } from "lucide-react";
 import { toast } from "sonner";
-import { api } from "../../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatNaira, timeAgo } from "@/lib/utils";
-import { NIGERIAN_BANKS, resolveAccountName, searchBanks } from "@/lib/banks";
+import { resolveAccountName, searchBanks } from "@/lib/banks";
+import { useStore } from "@/lib/store-context";
 import { cn } from "@/lib/utils";
 
 type Step = "choose" | "generating" | "pay" | "success";
 
-function ActivationSection({
-  active,
-  plan,
-}: {
-  active: boolean;
-  plan: "none" | "silver" | "gold";
-}) {
-  const latest = useQuery(api.users.latestActivation, {});
-  const beginActivation = useMutation(api.users.beginActivation);
-  const confirmActivation = useMutation(api.users.confirmActivation);
-
+function ActivationSection() {
+  const { user, actions } = useStore();
   const [step, setStep] = useState<Step>("choose");
   const [selectedPlan, setSelectedPlan] = useState<"silver" | "gold">(
-    plan === "gold" ? "gold" : "silver"
+    user?.plan === "gold" ? "gold" : "silver"
   );
   const [reference, setReference] = useState<string | null>(null);
   const [amount, setAmount] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
 
+  if (!user) return null;
+  if (user.activationStatus === "active") {
+    return (
+      <div className="rounded-3xl border border-[#2EFF00]/35 bg-[#2EFF00]/[0.06] p-5">
+        <div className="flex items-center gap-3">
+          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#2EFF00]/15 ring-1 ring-[#2EFF00]/40">
+            <BadgeCheck className="h-5 w-5 text-[#2EFF00]" />
+          </span>
+          <div>
+            <p className="font-display text-base font-bold text-white">Account activated</p>
+            <p className="text-xs text-[#B9A6E8]">
+              Jovia {user.plan === "gold" ? "Gold" : "Silver"} member · all activities unlocked
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   async function handleBegin() {
     setBusy(true);
     setStep("generating");
     try {
-      const res = await beginActivation({ plan: selectedPlan });
+      const res = actions.beginActivation(selectedPlan);
       setReference(res.reference);
       setAmount(res.amount);
-      // Simulate the JOVIA payment-flow detail generation.
       await new Promise((r) => setTimeout(r, 1400));
       setStep("pay");
     } catch (err) {
@@ -68,7 +76,8 @@ function ActivationSection({
     if (!reference) return;
     setBusy(true);
     try {
-      await confirmActivation({ reference });
+      await new Promise((r) => setTimeout(r, 600));
+      actions.confirmActivation(selectedPlan, reference);
       setStep("success");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not confirm payment");
@@ -77,32 +86,12 @@ function ActivationSection({
     }
   }
 
-  if (active) {
-    return (
-      <div className="rounded-3xl border border-[#2EFF00]/35 bg-[#2EFF00]/[0.06] p-5">
-        <div className="flex items-center gap-3">
-          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#2EFF00]/15 ring-1 ring-[#2EFF00]/40">
-            <BadgeCheck className="h-5 w-5 text-[#2EFF00]" />
-          </span>
-          <div>
-            <p className="font-display text-base font-bold text-white">Account activated</p>
-            <p className="text-xs text-[#B9A6E8]">
-              Jovia {plan === "gold" ? "Gold" : "Silver"} member · all activities unlocked
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="rounded-3xl border border-[#FFD700]/40 bg-[#16032f]/70 p-5">
       <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#FFD700]">
         Account Activation
       </p>
-      <h3 className="mt-1.5 font-display text-xl font-bold text-white">
-        Activate your account
-      </h3>
+      <h3 className="mt-1.5 font-display text-xl font-bold text-white">Activate your account</h3>
       <p className="mt-1 text-sm text-[#B9A6E8]">
         Complete your account activation using the normal JOVIA payment flow.
       </p>
@@ -143,9 +132,7 @@ function ActivationSection({
       {step === "generating" && (
         <div className="mt-6 flex flex-col items-center gap-3 pb-2 text-center">
           <Loader2 className="h-8 w-8 animate-spin text-[#FFD700]" />
-          <p className="text-sm font-medium text-[#E9E3F9]">
-            Generating your payment details...
-          </p>
+          <p className="text-sm font-medium text-[#E9E3F9]">Generating your payment details...</p>
           <div className="h-2 w-40 animate-pulse rounded-full bg-[#6B4FA1]/40" />
         </div>
       )}
@@ -158,7 +145,7 @@ function ActivationSection({
                 Amount due
               </p>
               <span className="rounded-md bg-[#FFD700]/12 px-2 py-0.5 text-[10px] font-bold text-[#FFD700]">
-                One-time
+                Demo mode
               </span>
             </div>
             <p className="mt-1 font-display text-3xl font-extrabold text-white">
@@ -186,8 +173,8 @@ function ActivationSection({
               </button>
             </div>
             <p className="mt-3 text-[11px] leading-relaxed text-[#8f80b8]">
-              Complete payment using the Jovia payment channel with the reference above.
-              Your account activates immediately after confirmation.
+              Demo activation — no real payment is processed. Confirm to unlock all activities
+              instantly.
             </p>
           </div>
           <Button onClick={handleConfirm} disabled={busy} className="w-full gap-2" size="lg">
@@ -200,12 +187,10 @@ function ActivationSection({
       {step === "success" && (
         <div className="mt-4 rounded-2xl border border-[#2EFF00]/40 bg-[#2EFF00]/[0.07] p-5 text-center">
           <BadgeCheck className="mx-auto h-10 w-10 text-[#2EFF00]" />
-          <p className="mt-2 font-display text-lg font-bold text-white">
-            Account activated 🎉
-          </p>
+          <p className="mt-2 font-display text-lg font-bold text-white">Account activated 🎉</p>
           <p className="mt-1 text-xs text-[#B9A6E8]">
-            Welcome to Jovia {selectedPlan === "gold" ? "Gold" : "Silver"}. Every activity
-            is now unlocked.
+            Welcome to Jovia {selectedPlan === "gold" ? "Gold" : "Silver"}. Every activity is now
+            unlocked.
           </p>
         </div>
       )}
@@ -214,14 +199,12 @@ function ActivationSection({
 }
 
 function BankForm() {
-  const me = useQuery(api.users.me, {});
-  const saveBankDetails = useMutation(api.users.saveBankDetails);
-
+  const { user, actions } = useStore();
   const [query, setQuery] = useState("");
   const [listOpen, setListOpen] = useState(false);
-  const [bank, setBank] = useState(me?.bankDetails?.bankName ?? "");
-  const [accountNumber, setAccountNumber] = useState(me?.bankDetails?.accountNumber ?? "");
-  const [accountName, setAccountName] = useState(me?.bankDetails?.accountName ?? "");
+  const [bank, setBank] = useState(user?.bankDetails?.bankName ?? "");
+  const [accountNumber, setAccountNumber] = useState(user?.bankDetails?.accountNumber ?? "");
+  const [accountName, setAccountName] = useState(user?.bankDetails?.accountName ?? "");
   const [verifying, setVerifying] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -247,11 +230,7 @@ function BankForm() {
     }
     setSaving(true);
     try {
-      await saveBankDetails({
-        bankName: bank,
-        accountNumber,
-        accountName: accountName.trim(),
-      });
+      actions.saveBankDetails({ bankName: bank, accountNumber, accountName: accountName.trim() });
       toast.success("Bank details saved ✓");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not save bank details");
@@ -265,12 +244,9 @@ function BankForm() {
       <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#FFD700]">
         Bank Details
       </p>
-      <h3 className="mt-1.5 font-display text-base font-bold text-white">
-        Withdrawal account
-      </h3>
+      <h3 className="mt-1.5 font-display text-base font-bold text-white">Withdrawal account</h3>
 
       <div className="mt-4 flex flex-col gap-3.5">
-        {/* Search bank */}
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="bank-search">Search bank</Label>
           <div className="relative">
@@ -289,7 +265,6 @@ function BankForm() {
           </div>
         </div>
 
-        {/* Select bank */}
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="bank-select">Select bank</Label>
           <button
@@ -299,9 +274,7 @@ function BankForm() {
             className="flex h-11 w-full items-center justify-between rounded-2xl border border-[#6B4FA1]/40 bg-[#16032f]/70 px-4 text-sm text-white"
             aria-expanded={listOpen}
           >
-            <span className={bank ? "" : "text-[#8f80b8]"}>
-              {bank || "Select bank"}
-            </span>
+            <span className={bank ? "" : "text-[#8f80b8]"}>{bank || "Select bank"}</span>
             <ChevronDown
               className={cn("h-4 w-4 text-[#8f80b8] transition-transform", listOpen && "rotate-180")}
             />
@@ -336,7 +309,6 @@ function BankForm() {
           )}
         </div>
 
-        {/* Account number + verify */}
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="account-number">Account number</Label>
           <div className="flex gap-2">
@@ -362,7 +334,6 @@ function BankForm() {
           </div>
         </div>
 
-        {/* Account name */}
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="account-name">Account name</Label>
           <Input
@@ -383,9 +354,9 @@ function BankForm() {
 }
 
 function ConnectedAccount() {
-  const me = useQuery(api.users.me, {});
-  const connectWhatsApp = useMutation(api.users.connectWhatsApp);
-  const connected = me?.whatsappConnected ?? false;
+  const { user, actions } = useStore();
+  if (!user) return null;
+  const connected = user.whatsappConnected;
 
   return (
     <div className="rounded-3xl border border-[#6B4FA1]/30 bg-[#1c0b38]/60 p-5">
@@ -407,7 +378,7 @@ function ConnectedAccount() {
         <Button
           size="sm"
           variant={connected ? "secondary" : "whatsapp"}
-          onClick={() => connectWhatsApp({ connected: !connected })}
+          onClick={() => actions.setWhatsappConnected(!connected)}
         >
           {connected ? "Disconnect" : "Connect"}
         </Button>
@@ -417,14 +388,13 @@ function ConnectedAccount() {
 }
 
 function WithdrawBox() {
-  const me = useQuery(api.users.me, {});
-  const requestWithdrawal = useMutation(api.wallet.requestWithdrawal);
+  const { user, actions } = useStore();
   const [amount, setAmount] = useState("");
   const [busy, setBusy] = useState(false);
+  if (!user) return null;
 
-  const balance = me?.balance ?? 0;
-  const active = me?.activationStatus === "active";
-  const hasBank = !!me?.bankDetails;
+  const active = user.activationStatus === "active";
+  const hasBank = !!user.bankDetails;
 
   async function handleWithdraw() {
     const naira = Number(amount.replace(/,/g, ""));
@@ -434,7 +404,7 @@ function WithdrawBox() {
     }
     setBusy(true);
     try {
-      await requestWithdrawal({ amount: Math.round(naira * 100) });
+      actions.requestWithdrawal(Math.round(naira * 100));
       toast.success("Withdrawal request submitted");
       setAmount("");
     } catch (err) {
@@ -456,7 +426,7 @@ function WithdrawBox() {
               Available balance
             </p>
             <p className="font-display text-2xl font-extrabold text-white">
-              {formatNaira(balance)}
+              {formatNaira(user.balance)}
             </p>
           </div>
         </div>
@@ -488,8 +458,7 @@ function WithdrawBox() {
 }
 
 function History() {
-  const transactions = useQuery(api.activities.myTransactions, {});
-  const withdrawals = useQuery(api.wallet.myWithdrawals, {});
+  const { transactions, withdrawals } = useStore();
 
   return (
     <div className="rounded-3xl border border-[#6B4FA1]/30 bg-[#1c0b38]/60 p-5">
@@ -497,15 +466,7 @@ function History() {
         Transaction History
       </p>
 
-      {transactions === undefined && (
-        <div className="mt-4 flex flex-col gap-2">
-          {[0, 1].map((i) => (
-            <div key={i} className="h-14 animate-pulse rounded-xl bg-[#6B4FA1]/15" />
-          ))}
-        </div>
-      )}
-
-      {transactions && transactions.length === 0 && (
+      {transactions.length === 0 && (
         <div className="mt-4 flex flex-col items-center gap-2 rounded-2xl border border-dashed border-[#6B4FA1]/30 py-8 text-center">
           <Building2 className="h-6 w-6 text-[#6B4FA1]" />
           <p className="text-xs text-[#8f80b8]">
@@ -515,11 +476,11 @@ function History() {
       )}
 
       <div className="mt-3.5 flex flex-col gap-2">
-        {(transactions ?? []).map((t) => {
+        {transactions.map((t) => {
           const credit = t.amount >= 0;
           return (
             <div
-              key={t._id}
+              key={t.id}
               className="flex items-center gap-3 rounded-xl border border-[#6B4FA1]/25 bg-[#0F0515]/50 p-3"
             >
               <span
@@ -551,15 +512,15 @@ function History() {
         })}
       </div>
 
-      {(withdrawals ?? []).length > 0 && (
+      {withdrawals.length > 0 && (
         <div className="mt-4">
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#8f80b8]">
             Withdrawal requests
           </p>
           <div className="mt-2 flex flex-col gap-2">
-            {(withdrawals ?? []).map((w) => (
+            {withdrawals.map((w) => (
               <div
-                key={w._id}
+                key={w.id}
                 className="flex items-center justify-between rounded-xl border border-[#6B4FA1]/25 bg-[#0F0515]/50 p-3"
               >
                 <div>
@@ -568,7 +529,9 @@ function History() {
                     {w.bankName} • {w.accountNumber} · {timeAgo(w.createdAt)}
                   </p>
                 </div>
-                <Badge variant={w.status === "paid" ? "success" : w.status === "failed" ? "danger" : "warning"}>
+                <Badge
+                  variant={w.status === "paid" ? "success" : w.status === "failed" ? "danger" : "warning"}
+                >
                   {w.status}
                 </Badge>
               </div>
@@ -581,22 +544,10 @@ function History() {
 }
 
 export default function Wallet() {
-  const me = useQuery(api.users.me, {});
-
-  if (me === undefined || me === null) {
-    return (
-      <div className="flex flex-col gap-3 pt-2">
-        {[0, 1, 2].map((i) => (
-          <div key={i} className="h-32 animate-pulse rounded-3xl bg-[#6B4FA1]/15" />
-        ))}
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col gap-4 pt-1">
       <h1 className="font-display text-xl font-bold text-white">Wallet</h1>
-      <ActivationSection active={me.activationStatus === "active"} plan={me.plan} />
+      <ActivationSection />
       <WithdrawBox />
       <BankForm />
       <ConnectedAccount />
