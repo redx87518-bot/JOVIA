@@ -1,0 +1,16 @@
+
+.env.local
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+*.tsbuildinfo
+
+# Logs and OS files
+*.log
+.DS_Store
+
+# Convex local
+.convex/
