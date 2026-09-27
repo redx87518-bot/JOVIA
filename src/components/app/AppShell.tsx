@@ -1,14 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useQuery } from "convex/react";
-import { useAuthActions } from "@convex-dev/auth/react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Bell,
   ChevronRight,
   CreditCard,
   Home,
-  LifeBuoy,
   LogOut,
   Menu,
   MessageCircle,
@@ -18,12 +15,10 @@ import {
   X,
   Zap,
 } from "lucide-react";
-import { useMutation } from "convex/react";
-import { api } from "../../convex/_generated/api";
+import { useStore } from "@/lib/store-context";
 import { JoviaMark, JoviaLogo } from "@/components/JoviaLogo";
 import { Button } from "@/components/ui/button";
 import { cn, initialsOf, timeAgo } from "@/lib/utils";
-import { usePrivacyMode } from "@/lib/privacy";
 import DashboardTab from "./screens/Dashboard";
 import TasksTab from "./screens/Tasks";
 import WalletTab from "./screens/Wallet";
@@ -60,20 +55,17 @@ function StatusBar() {
     <div className="flex items-center justify-between px-5 pt-3 text-[11px] font-semibold text-white/90">
       <span>{time}</span>
       <div className="flex items-center gap-1.5" aria-hidden="true">
-        {/* Signal */}
         <svg viewBox="0 0 18 12" className="h-3 w-4 fill-current">
           <rect x="0" y="8" width="3" height="4" rx="0.8" />
           <rect x="4.5" y="5.5" width="3" height="6.5" rx="0.8" />
           <rect x="9" y="3" width="3" height="9" rx="0.8" />
           <rect x="13.5" y="0.5" width="3" height="11.5" rx="0.8" opacity="0.45" />
         </svg>
-        {/* WiFi */}
         <svg viewBox="0 0 16 12" className="h-3 w-4 fill-none stroke-current" strokeWidth="1.6">
           <path d="M1 4.5a10 10 0 0 1 14 0" strokeLinecap="round" />
           <path d="M3.5 7a6.5 6.5 0 0 1 9 0" strokeLinecap="round" />
           <circle cx="8" cy="10" r="1.2" className="fill-current stroke-none" />
         </svg>
-        {/* Battery */}
         <svg viewBox="0 0 25 12" className="h-3 w-6">
           <rect x="0.5" y="0.5" width="21" height="11" rx="3" className="fill-none stroke-current" opacity="0.5" />
           <rect x="2" y="2" width="15" height="8" rx="1.8" className="fill-current" />
@@ -87,14 +79,10 @@ function StatusBar() {
 export default function AppShell() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
-  const { signOut } = useAuthActions();
-  const user = useQuery(api.users.me, {});
-  const notifications = useQuery(api.activities.myNotifications, {});
-  const allActivities = useQuery(api.activities.listActivities, {});  const markRead = useMutation(api.activities.markNotificationsRead);
+  const { user, notifications, actions } = useStore();
   const [menuOpen, setMenuOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [sessionActivity, setSessionActivity] = useState<SessionActivity | null>(null);
-  const [privacyMode] = usePrivacyMode();
 
   const tab = (params.get("tab") as TabId | null) ?? "dashboard";
 
@@ -102,50 +90,22 @@ export default function AppShell() {
     setParams(next === "dashboard" ? {} : { tab: next }, { replace: true });
   };
 
-  // Deep link ?start=<activityId> opens the earning session directly.
-  const startParam = params.get("start");
-  useEffect(() => {
-    if (!startParam || !allActivities) return;
-    const activity = allActivities.find((a) => a._id === startParam);
-    if (activity) {
-      setSessionActivity({
-        id: activity._id,
-        title: activity.title,
-        reward: activity.reward,
-        emoji: activity.emoji,
-        durationSeconds: activity.durationSeconds,
-      });
-    }
-    const next = new URLSearchParams(params);
-    next.delete("start");
-    setParams(next, { replace: true });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [startParam, allActivities]);
-
-  const unread = useMemo(
-    () => (notifications ?? []).filter((n) => !n.read).length,
-    [notifications]
-  );
+  const unread = useMemo(() => notifications.filter((n) => !n.read).length, [notifications]);
 
   async function handleSignOut() {
-    await signOut();
+    actions.signOut();
     navigate("/", { replace: true });
   }
 
   return (
     <div className="relative flex min-h-screen items-center justify-center sm:p-6">
-      {/* Ambient glow behind the phone on desktop */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 hidden sm:block"
-      >
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 hidden sm:block">
         <div className="absolute left-1/2 top-1/2 h-[560px] w-[560px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#6B4FA1]/20 blur-[150px]" />
       </div>
 
-      <div className="relative flex h-[100dvh] w-full flex-col overflow-hidden bg-[#0F0515] sm:h-[min(880px,94vh)] sm:w-[420px] sm:rounded-[2.6rem] sm:border sm:border-[#6B4FA1]/35 sm:shadow-phone">
+      <div className="relative flex h-[100dvh] w-full max-w-[420px] flex-col overflow-hidden bg-[#0F0515] sm:h-[min(880px,94vh)] sm:rounded-[2.6rem] sm:border sm:border-[#6B4FA1]/35 sm:shadow-phone">
         <StatusBar />
 
-        {/* Header */}
         <header className="flex items-center justify-between px-5 py-3">
           <button
             type="button"
@@ -188,7 +148,6 @@ export default function AppShell() {
           </div>
         </header>
 
-        {/* Screen area */}
         <main className="no-scrollbar relative flex-1 overflow-y-auto px-5 pb-28">
           <AnimatePresence mode="wait">
             <motion.div
@@ -199,28 +158,11 @@ export default function AppShell() {
               transition={{ duration: 0.22, ease: "easeOut" }}
             >
               {tab === "dashboard" && (
-                <DashboardTab
-                  username={user?.username ?? "Jovia user"}
-                  activationStatus={user?.activationStatus ?? "awaiting_payment"}
-                  balance={user?.balance ?? 0}
-                  totalEarned={user?.totalEarned ?? 0}
-                  totalWithdrawn={user?.totalWithdrawn ?? 0}
-                  onGoWallet={() => setTab("wallet")}
-                />
+                <DashboardTab onGoWallet={() => setTab("wallet")} onGoTasks={() => setTab("tasks")} />
               )}
               {tab === "tasks" && (
                 <TasksTab
-                  activated={user?.activationStatus === "active"}
-                  whatsappConnected={user?.whatsappConnected ?? false}
-                  onStartSession={(a) =>
-                    setSessionActivity({
-                      id: a.id,
-                      title: a.title,
-                      reward: a.reward,
-                      emoji: a.emoji,
-                      durationSeconds: a.durationSeconds,
-                    })
-                  }
+                  onStartSession={(a) => setSessionActivity(a)}
                   onGoWallet={() => setTab("wallet")}
                 />
               )}
@@ -231,7 +173,6 @@ export default function AppShell() {
           </AnimatePresence>
         </main>
 
-        {/* Bottom navigation */}
         <nav
           aria-label="App navigation"
           className="safe-bottom absolute inset-x-0 bottom-0 z-20 border-t border-[#6B4FA1]/30 bg-[#16032f]/92 px-2 pb-2 pt-1.5 backdrop-blur-xl"
@@ -252,7 +193,9 @@ export default function AppShell() {
                         : "text-[#8f80b8] hover:text-[#CFC4EC]"
                     )}
                   >
-                    <t.icon className={cn("h-5 w-5", active && "drop-shadow-[0_0_8px_rgba(255,215,0,0.45)]")} />
+                    <t.icon
+                      className={cn("h-5 w-5", active && "drop-shadow-[0_0_8px_rgba(255,215,0,0.45)]")}
+                    />
                     {t.label}
                   </button>
                 </li>
@@ -400,10 +343,7 @@ export default function AppShell() {
                   </button>
                 </div>
                 <div className="no-scrollbar flex-1 overflow-y-auto p-4">
-                  {!notifications && (
-                    <p className="p-4 text-sm text-[#8f80b8]">Loading…</p>
-                  )}
-                  {notifications && notifications.length === 0 && (
+                  {notifications.length === 0 && (
                     <div className="flex flex-col items-center gap-3 pt-16 text-center">
                       <Bell className="h-8 w-8 text-[#6B4FA1]" />
                       <p className="text-sm text-[#8f80b8]">
@@ -412,9 +352,9 @@ export default function AppShell() {
                     </div>
                   )}
                   <div className="flex flex-col gap-2.5">
-                    {(notifications ?? []).map((n) => (
+                    {notifications.map((n) => (
                       <div
-                        key={n._id}
+                        key={n.id}
                         className={cn(
                           "rounded-2xl border p-4",
                           n.read
@@ -441,8 +381,8 @@ export default function AppShell() {
                     <Button
                       variant="secondary"
                       className="w-full"
-                      onClick={async () => {
-                        await markRead({});
+                      onClick={() => {
+                        actions.markNotificationsRead();
                         setNotifOpen(false);
                       }}
                     >
@@ -455,12 +395,8 @@ export default function AppShell() {
           )}
         </AnimatePresence>
 
-        {/* Earning session modal */}
         {sessionActivity && (
-          <EarningSession
-            activity={sessionActivity}
-            onClose={() => setSessionActivity(null)}
-          />
+          <EarningSession activity={sessionActivity} onClose={() => setSessionActivity(null)} />
         )}
       </div>
     </div>

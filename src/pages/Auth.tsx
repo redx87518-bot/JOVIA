@@ -1,11 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { useMutation, useQuery } from "convex/react";
-import { useAuthActions } from "@convex-dev/auth/react";
 import { toast } from "sonner";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, Loader2, Lock, Mail, User } from "lucide-react";
-import { api } from "../convex/_generated/api";
+import { useStore } from "@/lib/store-context";
 import { JoviaLogo } from "@/components/JoviaLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,19 +22,14 @@ function returnTarget(params: URLSearchParams): string {
 export default function Auth() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const { signIn } = useAuthActions();
-  const trackSignup = useMutation(api.activities.trackSignup);
-
-  const viewer = useQuery(api.users.me, {});
+  const { user, actions } = useStore();
 
   const initialMode: Mode = params.get("mode") === "signup" ? "signup" : "signin";
   const [mode, setMode] = useState<Mode>(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [plan, setPlan] = useState<Plan | null>(
-    (params.get("plan") as Plan | null) ?? null
-  );
+  const [plan, setPlan] = useState<Plan | null>((params.get("plan") as Plan | null) ?? null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,43 +37,28 @@ export default function Auth() {
     setMode(initialMode);
   }, [initialMode]);
 
-  // Already signed in? Go straight to the app.
   useEffect(() => {
-    if (viewer !== undefined && viewer !== null) {
-      navigate(returnTarget(params), { replace: true });
-    }
+    if (user) navigate(returnTarget(params), { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [viewer]);
+  }, [user]);
 
   const isSignup = mode === "signup";
 
-  async function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setLoading(true);
     try {
-      await signIn("password", {
-        flow: isSignup ? "signUp" : "signIn",
-        ...(isSignup ? { name } : {}),
-        email,
-        password,
-      });
       if (isSignup) {
-        await trackSignup({}).catch(() => undefined);
+        actions.signUp(name, email, password);
+        toast.success("Welcome to Jovia!");
+      } else {
+        actions.signIn(email, password);
+        toast.success("Welcome back!");
       }
-      toast.success(
-        isSignup
-          ? `Welcome to Jovia${name ? `, ${name.split(" ")[0]}` : ""}!`
-          : "Welcome back!"
-      );
       navigate(returnTarget(params), { replace: true });
     } catch (err) {
-      const raw = err instanceof Error ? err.message : "";
-      setError(
-        raw.toLowerCase().includes("invalid") || raw.toLowerCase().includes("account")
-          ? "Invalid email or password."
-          : raw || "Something went wrong. Please try again."
-      );
+      setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setLoading(false);
     }

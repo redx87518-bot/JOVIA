@@ -1,14 +1,10 @@
-import { useQuery } from "convex/react";
 import { useState } from "react";
-import { ChevronRight, Clock3, Flame, Sparkles, TrendingUp } from "lucide-react";
-import { api } from "../../../convex/_generated/api";
+import { ChevronRight, Clock3, Flame, Lock, Sparkles, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatNaira, cn } from "@/lib/utils";
+import { useStore } from "@/lib/store-context";
 import type { SessionActivity } from "../EarningSession";
-import type { Doc } from "../../../convex/_generated/dataModel";
-
-type ActivityDoc = Doc<"activities">;
 
 interface MarketProps {
   onStartSession: (activity: SessionActivity) => void;
@@ -22,14 +18,6 @@ const CATEGORY_TABS = [
   { id: "social", label: "Social" },
 ] as const;
 
-const CATEGORY_EMOJI: Record<string, string> = {
-  videos: "🎬",
-  games: "🎮",
-  music: "🎧",
-  social: "💬",
-  market: "🛍️",
-};
-
 const CATEGORY_NAMES: Record<string, string> = {
   videos: "Celebrity Videos",
   games: "Fun Games",
@@ -38,30 +26,13 @@ const CATEGORY_NAMES: Record<string, string> = {
 };
 
 export default function Market({ onStartSession }: MarketProps) {
-  const activities = useQuery(api.activities.listActivities, {});
+  const { user, activities } = useStore();
   const [tab, setTab] = useState<(typeof CATEGORY_TABS)[number]["id"]>("all");
 
-  if (activities === undefined) {
-    return (
-      <div className="flex flex-col gap-3 pt-2">
-        {[0, 1, 2].map((i) => (
-          <div key={i} className="h-24 animate-pulse rounded-2xl bg-[#6B4FA1]/15" />
-        ))}
-      </div>
-    );
-  }
+  const activated = user?.activationStatus === "active";
 
-  const filtered =
-    tab === "all" ? activities : activities.filter((a) => a.category === tab);
+  const filtered = tab === "all" ? activities : activities.filter((a) => a.category === tab);
   const featured = activities.find((a) => a.category === "videos") ?? activities[0];
-
-  const toSession = (a: ActivityDoc): SessionActivity => ({
-    id: a._id,
-    title: a.title,
-    reward: a.reward,
-    emoji: a.emoji,
-    durationSeconds: a.durationSeconds,
-  });
 
   return (
     <div className="flex flex-col gap-5 pt-1">
@@ -76,16 +47,14 @@ export default function Market({ onStartSession }: MarketProps) {
       {featured && (
         <button
           type="button"
-          onClick={() => onStartSession(toSession(featured))}
-          className="relative overflow-hidden rounded-3xl border border-[#FFD700]/35 bg-gradient-to-br from-[#2D1B4E] to-[#16032f] p-5 text-left transition-transform hover:-translate-y-0.5"
+          onClick={() => (activated ? onStartSession(featured) : undefined)}
+          className="relative overflow-hidden rounded-3xl border border-[#FFD700]/35 bg-gradient-to-br from-[#2D1B4E] to-[#16032f] p-5 text-left transition-transform enabled:hover:-translate-y-0.5"
         >
           <span className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-[#FFD700]/15 blur-2xl" />
           <Badge className="gap-1">
             <Sparkles className="h-3 w-3" /> Featured today
           </Badge>
-          <p className="mt-2.5 font-display text-lg font-bold text-white">
-            {featured.title}
-          </p>
+          <p className="mt-2.5 font-display text-lg font-bold text-white">{featured.title}</p>
           <p className="mt-0.5 text-xs text-[#B9A6E8]">
             {CATEGORY_NAMES[featured.category]} · {featured.durationSeconds}s session
           </p>
@@ -95,7 +64,7 @@ export default function Market({ onStartSession }: MarketProps) {
             </span>
             <span className="text-[11px] text-[#8f80b8]">/ {featured.rewardUnit}</span>
             <span className="ml-auto flex h-9 w-9 items-center justify-center rounded-full bg-[#FFD700] text-[#16032f]">
-              <ChevronRight className="h-4 w-4" />
+              {activated ? <ChevronRight className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
             </span>
           </div>
         </button>
@@ -132,7 +101,7 @@ export default function Market({ onStartSession }: MarketProps) {
       <div className="flex flex-col gap-3">
         {filtered.map((a) => (
           <div
-            key={a._id}
+            key={a.id}
             className="flex items-center gap-3.5 rounded-2xl border border-[#6B4FA1]/30 bg-[#1c0b38]/60 p-3.5 transition-all hover:border-[#FFD700]/40"
           >
             <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#2D1B4E] to-[#16032f] text-xl ring-1 ring-[#6B4FA1]/40">
@@ -158,9 +127,15 @@ export default function Market({ onStartSession }: MarketProps) {
                 </span>
               </div>
             </div>
-            <Button size="sm" onClick={() => onStartSession(toSession(a))}>
-              Start
-            </Button>
+            {activated ? (
+              <Button size="sm" onClick={() => onStartSession(a)}>
+                Start
+              </Button>
+            ) : (
+              <Button size="sm" variant="secondary" className="gap-1" disabled>
+                <Lock className="h-3 w-3" /> Locked
+              </Button>
+            )}
           </div>
         ))}
         {filtered.length === 0 && (

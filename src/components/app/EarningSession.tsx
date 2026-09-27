@@ -1,22 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useMutation } from "convex/react";
 import { AnimatePresence, motion } from "framer-motion";
 import { PartyPopper, ShieldCheck, X } from "lucide-react";
 import { toast } from "sonner";
-import { api } from "../../convex/_generated/api";
-import type { Id } from "../../convex/_generated/dataModel";
+import { useStore } from "@/lib/store-context";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { formatNaira } from "@/lib/utils";
 import { formatCountdown, playSessionChime } from "@/lib/session";
+import type { Activity } from "@/lib/store";
 
-export interface SessionActivity {
-  id: Id<"activities">;
-  title: string;
-  reward: number;
-  emoji: string;
-  durationSeconds: number;
-}
+export type SessionActivity = Activity;
 
 type Phase = "preparing" | "running" | "claiming" | "done";
 
@@ -27,20 +20,12 @@ export default function EarningSession({
   activity: SessionActivity;
   onClose: () => void;
 }) {
+  const { actions } = useStore();
   const [phase, setPhase] = useState<Phase>("preparing");
   const [remaining, setRemaining] = useState(activity.durationSeconds);
   const [endedAt, setEndedAt] = useState<number | null>(null);
-  const sessionIdRef = useRef<Id<"earningSessions"> | null>(null);
+  const sessionIdRef = useRef<string | null>(null);
   const startedRef = useRef(false);
-  const closedRef = useRef(false);
-
-  const startSession = useMutation(api.activities.startSession);
-  const completeSession = useMutation(api.activities.completeSession);
-
-  const handleClose = () => {
-    closedRef.current = true;
-    onClose();
-  };
 
   const earnedKobo = useMemo(() => {
     if (!endedAt) return 0;
@@ -49,25 +34,20 @@ export default function EarningSession({
     return Math.floor((elapsed / total) * activity.reward);
   }, [endedAt, remaining, activity.durationSeconds, activity.reward]);
 
-  // Create the server-side session once.
   useEffect(() => {
     if (startedRef.current) return;
     startedRef.current = true;
-    (async () => {
-      try {
-        const res = await startSession({ activityId: activity.id });
-        sessionIdRef.current = res.sessionId;
-        setEndedAt(res.endsAt);
-        setPhase("running");
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : "Could not start session";
-        toast.error(msg);
-        onClose();
-      }
-    })();
-  }, [activity.id, startSession, onClose]);
+    try {
+      const { endsAt } = actions.startEarningSession(activity.id);
+      sessionIdRef.current = `s_${activity.id}_${endsAt}`;
+      setEndedAt(endsAt);
+      setPhase("running");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not start session");
+      onClose();
+    }
+  }, [activity.id, actions, onClose]);
 
-  // Countdown tick.
   useEffect(() => {
     if (phase !== "running" || !endedAt) return;
     const t = setInterval(() => {
@@ -81,23 +61,22 @@ export default function EarningSession({
     return () => clearInterval(t);
   }, [phase, endedAt]);
 
-  // Credit the reward once the countdown finishes.
   useEffect(() => {
     if (phase !== "claiming") return;
     let cancelled = false;
     (async () => {
       try {
-        const res = await completeSession({ sessionId: sessionIdRef.current! });
-        if (res.reward === undefined) {
-          throw new Error("Session could not be credited");
-        }
-        if (!cancelled && !closedRef.current) {
-          toast.success(`+${formatNaira(res.reward)} credited from ${activity.title}!`);
+        // Find and complete the newest active session for this activity.
+        const sessionId = findActiveSessionId(activity.id);
+        if (!sessionId) throw new Error("No active session found");
+        await new Promise((r) => setTimeout(r, 400));
+        const reward = actions.completeEarningSession(sessionId);
+        if (!cancelled) {
+          toast.success(`+${formatNaira(reward)} credited from ${activity.title}!`);
           setPhase("done");
         }
       } catch (err) {
-        const msg = err instanceof Error ? err.message : "Could not credit reward";
-        toast.error(msg);
+        toast.error(err instanceof Error ? err.message : "Could not credit reward");
         onClose();
       }
     })();
@@ -129,7 +108,7 @@ export default function EarningSession({
         >
           <button
             type="button"
-            onClick={handleClose}
+            onClick={onClose}
             aria-label="Close session"
             className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-lg border border-[#6B4FA1]/40 text-white/80"
           >
@@ -192,7 +171,7 @@ export default function EarningSession({
               <p className="mt-1.5 text-xs text-[#B9A6E8]">
                 {activity.title} · added to your available balance
               </p>
-              <Button onClick={handleClose} className="mt-6 w-full">
+              <Button onClick={onClose} className="mt-6 w-full">
                 Done
               </Button>
             </>
@@ -201,4 +180,21 @@ export default function EarningSession({
       </motion.div>
     </AnimatePresence>
   );
+}
+
+/** Finds the newest active earning session id for an activity via the store. */
+function findActiveSessionId(activityId: string): string | null {
+  try {
+    const raw = localStorage.getItem("jovia.earningSessions");
+    if (!raw) return null;
+    const sessions = JSON.parse(raw) as Array<{
+      id: string;
+      activityId: string;
+      status: string;
+    }>;
+    const match = sessions.find((s) => s.activityId === activityId && s.status === "active");
+    return match?.id ?? null;
+  } catch {
+    return null;
+  }
 }

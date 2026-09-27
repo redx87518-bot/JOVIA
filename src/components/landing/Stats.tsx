@@ -1,27 +1,27 @@
-import { useQuery } from "convex/react";
-import { api } from "../../convex/_generated/api";
 import { motion } from "framer-motion";
 import { BadgeCheck, TrendingUp, Users, Wallet } from "lucide-react";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
 
-function compact(n: number): { value: number; suffix: string; decimals: number } {
-  if (n >= 1_000_000) return { value: n / 1_000_000, suffix: "M+", decimals: 1 };
-  if (n >= 1_000) return { value: n / 1_000, suffix: "K+", decimals: 1 };
-  return { value: n, suffix: "K+", decimals: 0 };
+interface StatsProps {
+  registeredUsers: number;
+  rewarded: number;
+  paidOutKobo: number;
 }
 
-export function Stats() {
-  const stats = useQuery(api.activities.publicStats, {});
-  const users = stats?.registeredUsers ?? 0;
-  const rewarded = stats?.rewarded ?? 0;
-  const paidOutNaira = (stats?.paidOutKobo ?? 0) / 100;
-  const paid = compact(paidOutNaira);
+function compact(n: number): { value: number; suffix: string; decimals: number } {
+  if (n >= 1_000_000) return { value: n / 1_000_000, suffix: "M+", decimals: 1 };
+  if (n >= 1_000) return { value: n / 1_000, suffix: "K+", decimals: 0 };
+  return { value: n, suffix: "", decimals: 0 };
+}
+
+export function Stats({ registeredUsers, rewarded, paidOutKobo }: StatsProps) {
+  const paid = compact(paidOutKobo / 100);
 
   const cards = [
     {
       icon: Users,
       label: "Registered Users",
-      format: compact(users),
+      format: compact(registeredUsers), // 200,000 -> "200K+"
       accent: "#FFD700",
     },
     {
@@ -63,7 +63,7 @@ export function Stats() {
               <card.icon className="h-6 w-6" />
             </span>
             <div className="min-w-0">
-              <p className="flex items-center gap-1.5 font-display text-3xl font-bold text-white">
+              <p className="font-display text-3xl font-bold text-white">
                 <AnimatedCounter
                   to={card.format.value}
                   decimals={card.format.decimals}
@@ -79,11 +79,6 @@ export function Stats() {
                 />
               </p>
             </div>
-            <span
-              aria-hidden="true"
-              className="ml-auto h-2 w-2 shrink-0 animate-pulse rounded-full"
-              style={{ backgroundColor: card.accent, opacity: 0.7 }}
-            />
           </motion.div>
         ))}
       </div>

@@ -14,3 +14,6 @@ dist/
 
 # Convex local
 .convex/
+
+# Freebuff preview build snapshot
+isolate/
