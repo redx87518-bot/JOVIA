@@ -6,6 +6,7 @@ import { useStore } from "@/lib/store-context";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { formatNaira } from "@/lib/utils";
+import { ActivityImage } from "@/components/ActivityImage";
 import { formatCountdown, playSessionChime } from "@/lib/session";
 import type { Activity } from "@/lib/store";
 
@@ -115,9 +116,12 @@ export default function EarningSession({
             <X className="h-4 w-4" />
           </button>
 
-          <span className="mx-auto mt-2 flex h-20 w-20 items-center justify-center rounded-3xl bg-[#FFD700]/12 text-4xl ring-1 ring-[#FFD700]/40">
-            {activity.emoji}
-          </span>
+          <ActivityImage
+            src={activity.image}
+            emoji={activity.emoji}
+            alt=""
+            className="mx-auto mt-2 h-20 w-20 rounded-3xl ring-1 ring-[#FFD700]/40"
+          />
 
           {phase === "preparing" && (
             <>

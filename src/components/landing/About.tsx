@@ -2,22 +2,26 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowDown, CheckCircle2, Eye, HeartHandshake, ShieldCheck, Sparkles } from "lucide-react";
 import { SectionHeading } from "@/components/SectionHeading";
+import { ActivityImage } from "@/components/ActivityImage";
 
 const HIGHLIGHTS = [
   {
     title: "User-focused design",
     description: "Clear activity flows and easy-to-understand options.",
     emoji: "🧭",
+    image: "/images/hero-cac.jpg",
   },
   {
     title: "Multiple activity categories",
     description: "Video, games, music, social activities and more.",
     emoji: "🗂️",
+    image: "/images/hero-meta.jpg",
   },
   {
     title: "Two membership levels",
     description: "Choose Silver or Gold based on the access level you want.",
     emoji: "🏅",
+    image: "/images/hero-music.jpg",
   },
 ];
 
@@ -82,9 +86,12 @@ export function About() {
               transition={{ delay: i * 0.1, duration: 0.55 }}
               className="jovia-card flex items-start gap-4 p-5"
             >
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#2EFF00]/12 text-lg ring-1 ring-[#2EFF00]/30">
-                {h.emoji}
-              </span>
+              <ActivityImage
+                src={h.image}
+                emoji={h.emoji}
+                alt={h.title}
+                className="h-11 w-11 shrink-0 rounded-2xl ring-1 ring-[#2EFF00]/30"
+              />
               <div>
                 <p className="flex items-center gap-2 font-display text-base font-bold text-white">
                   <CheckCircle2 className="h-4 w-4 text-[#2EFF00]" />

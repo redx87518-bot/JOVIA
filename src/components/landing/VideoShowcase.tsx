@@ -72,14 +72,29 @@ function Poster({ showcase, onPlay }: { showcase: Showcase; onPlay: () => void }
         ))}
       </div>
 
+      {/* Real poster extracted from joviapltform.site */}
+      <img
+        src={showcase.id === "games" ? "/images/jovia-games-preview.jpg" : "/images/jovia-celebrity-preview.jpg"}
+        alt=""
+        aria-hidden="true"
+        loading="lazy"
+        draggable={false}
+        className="absolute inset-0 h-full w-full object-cover object-top"
+      />
+      <div
+        className="absolute inset-0"
+        style={{
+          background: `linear-gradient(180deg, ${showcase.from}40, transparent 40%, ${showcase.to}99)`,
+        }}
+      />
+
       {/* Spotlight */}
       <div className="absolute inset-0 animate-pulse-glow bg-[radial-gradient(circle_at_50%_35%,rgba(255,215,0,0.22),transparent_65%)]" />
 
       {/* Center content */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-        <span className="text-5xl">{showcase.emoji}</span>
+      <div className="absolute inset-x-0 bottom-4 flex flex-col items-center gap-2">
         <span
-          className="text-[11px] font-bold uppercase tracking-[0.3em]"
+          className="text-[11px] font-bold uppercase tracking-[0.3em] drop-shadow"
           style={{ color: showcase.accent }}
         >
           JOVIA {showcase.id === "games" ? "FUN GAMES" : "CELEBRITY"}
@@ -210,7 +225,15 @@ export function VideoShowcase() {
             >
               <div className="flex items-center justify-between border-b border-[#6B4FA1]/30 px-5 py-3.5">
                 <div className="flex items-center gap-2.5">
-                  <span className="text-lg">{active.emoji}</span>
+                  <span className="h-9 w-9 shrink-0 overflow-hidden rounded-xl ring-1 ring-white/20">
+                    <img
+                      src={active.id === "games" ? "/images/jovia-games-preview.jpg" : "/images/jovia-celebrity-preview.jpg"}
+                      alt=""
+                      aria-hidden="true"
+                      draggable={false}
+                      className="h-full w-full object-cover"
+                    />
+                  </span>
                   <div>
                     <p className="text-sm font-bold text-white">{active.title}</p>
                     <p className="text-[11px]" style={{ color: active.accent }}>

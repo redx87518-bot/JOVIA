@@ -157,17 +157,32 @@ export function Hero() {
             className="absolute bottom-6 right-0 w-60 rounded-3xl glass p-5"
           >
             <div className="flex items-center gap-3">
-              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#FFD700]/15 text-xl">
-                🎬
+              <span className="h-11 w-11 shrink-0 overflow-hidden rounded-2xl ring-1 ring-[#FFD700]/40">
+                <img
+                  src="/images/jovia-celebrity-preview.jpg"
+                  alt=""
+                  aria-hidden="true"
+                  loading="lazy"
+                  draggable={false}
+                  className="h-full w-full object-cover"
+                />
               </span>
               <div>
                 <p className="text-sm font-semibold text-white">Celebrity Videos</p>
                 <p className="text-xs text-[#B9A6E8]">₦10,000 / hour watched</p>
               </div>
             </div>
-            <div className="relative mt-4 flex h-24 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-[#2D1B4E] to-[#16032f] ring-1 ring-[#FFD700]/25">
+            <div className="relative mt-4 flex h-24 items-center justify-center overflow-hidden rounded-2xl ring-1 ring-[#FFD700]/25">
+              <img
+                src="/images/jovia-celebrity-preview.jpg"
+                alt=""
+                aria-hidden="true"
+                loading="lazy"
+                draggable={false}
+                className="absolute inset-0 h-full w-full object-cover object-top"
+              />
               <span className="absolute inset-0 animate-pulse-glow bg-[radial-gradient(circle_at_30%_20%,rgba(255,215,0,0.25),transparent_60%)]" />
-              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#FFD700] text-[#16032f] shadow-lg">
+              <span className="relative flex h-11 w-11 items-center justify-center rounded-full bg-[#FFD700] text-[#16032f] shadow-lg">
                 <Play className="ml-0.5 h-5 w-5" fill="currentColor" />
               </span>
             </div>

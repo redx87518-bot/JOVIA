@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { ChevronRight, Eye, Lock, MessageCircle, Music2, Play, Upload } from "lucide-react";
+import { ChevronRight, Eye, Lock, MessageCircle, Play, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatNaira } from "@/lib/utils";
 import { useStore } from "@/lib/store-context";
+import { ActivityImage } from "@/components/ActivityImage";
 import type { SessionActivity } from "../EarningSession";
 
 interface TasksProps {
@@ -38,14 +39,17 @@ export default function Tasks({ onStartSession, onGoWallet }: TasksProps) {
 
         {featured && (
           <div className="mt-3 overflow-hidden rounded-3xl border border-[#FFD700]/25 bg-[#16032f]/70">
-            <div className="relative h-44 bg-gradient-to-br from-[#2D1B4E] to-[#16032f]">
-              <div className="absolute inset-0 animate-pulse-glow bg-[radial-gradient(circle_at_50%_30%,rgba(255,215,0,0.22),transparent_60%)]" />
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-                <span className="text-4xl">{featured.emoji}</span>
-                <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#FFD700]">
-                  Jovia Fun Games Video
-                </span>
-              </div>
+            <div className="relative h-44">
+              <img
+                src={featured.image}
+                alt=""
+                draggable={false}
+                className="absolute inset-0 h-full w-full object-cover object-top"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#16032f] via-[#16032f]/45 to-[#16032f]/20" />
+              <span className="absolute left-4 top-3.5 rounded-full bg-black/50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[#FFD700] backdrop-blur">
+                Jovia Fun Games Video
+              </span>
               <button
                 type="button"
                 onClick={() => (activated ? onStartSession(featured) : onGoWallet())}
@@ -58,7 +62,7 @@ export default function Tasks({ onStartSession, onGoWallet }: TasksProps) {
                   <Lock className="h-5 w-5" />
                 )}
               </button>
-              <span className="absolute right-3 top-3 rounded-full bg-[#2EFF00]/15 px-2.5 py-1 text-[10px] font-bold text-[#2EFF00] ring-1 ring-[#2EFF00]/35">
+              <span className="absolute right-3 top-3 rounded-full bg-[#2EFF00]/15 px-2.5 py-1 text-[10px] font-bold text-[#2EFF00] ring-1 ring-[#2EFF00]/35 backdrop-blur">
                 {formatNaira(featured.reward)} / {featured.rewardUnit}
               </span>
             </div>
@@ -89,9 +93,12 @@ export default function Tasks({ onStartSession, onGoWallet }: TasksProps) {
                 onClick={() => (activated ? onStartSession(v) : onGoWallet())}
                 className="flex items-center gap-3 rounded-2xl border border-[#6B4FA1]/30 bg-[#1c0b38]/60 p-3.5 text-left transition-all hover:border-[#FFD700]/40"
               >
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FFD700]/12 text-lg">
-                  {v.emoji}
-                </span>
+                <ActivityImage
+                  src={v.image}
+                  emoji={v.emoji}
+                  alt=""
+                  className="h-10 w-10 shrink-0 rounded-xl ring-1 ring-[#6B4FA1]/40"
+                />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-semibold text-white">{v.title}</span>
                   <span className="block text-xs text-[#8f80b8]">
@@ -131,9 +138,12 @@ export default function Tasks({ onStartSession, onGoWallet }: TasksProps) {
               key={g.id}
               className="flex items-center gap-3.5 rounded-2xl border border-[#6B4FA1]/30 bg-[#1c0b38]/60 p-3.5 transition-all hover:border-[#FFD700]/40"
             >
-              <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#2D1B4E] to-[#16032f] text-2xl ring-1 ring-[#6B4FA1]/40">
-                {g.emoji}
-              </span>
+              <ActivityImage
+                src={g.image}
+                emoji={g.emoji}
+                alt=""
+                className="h-14 w-14 shrink-0 rounded-2xl ring-1 ring-[#6B4FA1]/40"
+              />
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-bold text-white">{g.title}</p>
                 <p className="truncate text-xs text-[#B9A6E8]">{g.description}</p>
@@ -163,9 +173,12 @@ export default function Tasks({ onStartSession, onGoWallet }: TasksProps) {
                   disabled={!activated}
                   className="flex items-center gap-3 rounded-2xl border border-[#6B4FA1]/25 bg-[#16032f]/60 p-3.5 text-left transition-all enabled:hover:border-[#FFD700]/40 disabled:opacity-60"
                 >
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#6B4FA1]/20 text-lg">
-                    {t.emoji}
-                  </span>
+                  <ActivityImage
+                    src={t.image}
+                    emoji={t.emoji}
+                    alt=""
+                    className="h-10 w-10 shrink-0 rounded-xl ring-1 ring-[#6B4FA1]/40"
+                  />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-semibold text-white">{t.title}</span>
                     <span className="block text-xs text-[#8f80b8]">
@@ -257,13 +270,12 @@ export default function Tasks({ onStartSession, onGoWallet }: TasksProps) {
               key={m.id}
               className="flex items-center gap-3.5 rounded-2xl border border-[#6B4FA1]/30 bg-[#1c0b38]/60 p-3.5"
             >
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#1DB954]/15 ring-1 ring-[#1DB954]/40">
-                {m.slug === "music-listening" ? (
-                  <Music2 className="h-5 w-5 text-[#1DB954]" />
-                ) : (
-                  <span className="text-lg">{m.emoji}</span>
-                )}
-              </span>
+              <ActivityImage
+                src={m.image}
+                emoji={m.emoji}
+                alt=""
+                className="h-12 w-12 shrink-0 rounded-xl ring-1 ring-[#1DB954]/40"
+              />
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-bold text-white">{m.title}</p>
                 <p className="truncate text-xs text-[#B9A6E8]">{m.description}</p>

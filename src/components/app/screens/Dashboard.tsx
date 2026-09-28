@@ -1,4 +1,5 @@
-import { Eye, EyeOff, Plus, Send, Zap } from "lucide-react";
+import { useState } from "react";
+import { Eye, EyeOff, Play, Plus, Send, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatNaira } from "@/lib/utils";
@@ -12,6 +13,7 @@ interface DashboardProps {
 
 export default function Dashboard({ onGoWallet, onGoTasks }: DashboardProps) {
   const { user, privacyMode, actions } = useStore();
+  const [videoPlaying, setVideoPlaying] = useState(false);
   if (!user) return null;
 
   const active = user.activationStatus === "active";
@@ -126,6 +128,49 @@ export default function Dashboard({ onGoWallet, onGoTasks }: DashboardProps) {
             {maskAmount(formatNaira(user.totalWithdrawn, { compact: true }), privacyMode)} paid out
           </span>
         </button>
+      </div>
+
+      {/* Tap-to-play Jovia video */}
+      <div className="relative overflow-hidden rounded-3xl border border-[#FFD700]/30 bg-[#16032f]">
+        {videoPlaying ? (
+          <video
+            src="/videos/jovia-games.mp4"
+            poster="/images/jovia-games-preview.jpg"
+            className="aspect-video w-full bg-black"
+            controls
+            autoPlay
+            playsInline
+          />
+        ) : (
+          <button
+            type="button"
+            onClick={() => setVideoPlaying(true)}
+            aria-label="Play the Jovia Fun Games video"
+            className="group relative block h-40 w-full text-left"
+          >
+            <img
+              src="/images/jovia-games-preview.jpg"
+              alt=""
+              draggable={false}
+              className="absolute inset-0 h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+            />
+            <span className="absolute inset-0 bg-gradient-to-t from-[#16032f]/95 via-[#16032f]/35 to-transparent" />
+            <span className="absolute left-4 top-3.5 font-display text-xs font-extrabold tracking-wide text-white">
+              JOVIA <span className="text-[#FFD700]">NETWORK</span>
+            </span>
+            <span className="absolute right-3 top-3 rounded-full bg-black/50 px-2.5 py-1 text-[10px] font-bold text-[#FFD700] backdrop-blur">
+              WATCH &amp; EARN
+            </span>
+            <span className="absolute bottom-3.5 left-4 flex items-center gap-2.5">
+              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#FFD700] text-[#16032f] shadow-xl transition-transform group-hover:scale-110">
+                <Play className="ml-0.5 h-5 w-5" fill="currentColor" />
+              </span>
+              <span className="font-display text-sm font-bold text-white">
+                Jovia Fun Games — tap to watch
+              </span>
+            </span>
+          </button>
+        )}
       </div>
 
       {!active && (
