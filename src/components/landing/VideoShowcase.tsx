@@ -5,14 +5,9 @@ import { ArrowRight, Play, ShieldCheck, Sparkles, X } from "lucide-react";
 import { SectionHeading } from "@/components/SectionHeading";
 import { Button } from "@/components/ui/button";
 
-/* Public sample clips used as placeholder video content until the real
-   celebrity/games media library is connected. The old gtv-videos-bucket
-   samples now return 403, so we use stable test MP4s that play inline with
-   no external player scripts and degrade gracefully when offline. */
-const SAMPLE_CLIPS = [
-  "https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4",
-  "https://test-videos.co.uk/vids/jellyfish/mp4/h264/360/Jellyfish_360_10s_1MB.mp4",
-];
+/* Official Jovia clips extracted from joviapltform.site and served locally
+   from /public/videos — the real Celebrity and Fun Games media. */
+const SAMPLE_CLIPS = ["/videos/jovia-celebrity.mp4", "/videos/jovia-games.mp4"];
 
 interface Showcase {
   id: string;
@@ -256,9 +251,9 @@ export function VideoShowcase() {
                 }}
               />
               <div className="flex flex-col items-start justify-between gap-3 px-5 py-4 sm:flex-row sm:items-center">
-                <p className="text-xs text-[#B9A6E8]">
-                  Sample preview clip. The full library unlocks inside the Jovia app.
-                </p>
+        <p className="text-xs text-[#B9A6E8]">
+          Official Jovia preview clip. The full library unlocks inside the Jovia app.
+        </p>
                 <Link to="/auth?mode=signup">
                   <Button size="sm" className="gap-1.5">
                     Start earning <ArrowRight className="h-3.5 w-3.5" />

@@ -3,16 +3,11 @@ import { Play, Sparkles, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
-/* Public sample clips used as the home page promo video placeholder.
-   The gtv-videos-bucket samples now return 403, so we use stable test MP4s:
-   primary from test-videos.co.uk with a different-host fallback. */
-const PROMO_CLIP =
-  "https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/720/Big_Buck_Bunny_720_10s_2MB.mp4";
-const PROMO_CLIP_FALLBACK =
-  "https://mdn.github.io/shared-assets/videos/flower.mp4";
-/* Open-codec VP9 fallback: plays even in browsers without proprietary codecs. */
-const PROMO_CLIP_WEBM =
-  "https://upload.wikimedia.org/wikipedia/commons/transcoded/c/c0/Big_Buck_Bunny_4K.webm/Big_Buck_Bunny_4K.webm.720p.vp9.webm";
+/* Official Jovia promo clips extracted from joviapltform.site and served
+   locally from /public/videos so playback is fast and never blocked by
+   hotlink or CORS restrictions. */
+const PROMO_CLIP = "/videos/jovia-games.mp4";
+const PROMO_CLIP_FALLBACK = "/videos/jovia-celebrity.mp4";
 
 export function HomeVideo({
   open,
@@ -60,7 +55,7 @@ export function HomeVideo({
             </span>
           </div>
           <span className="absolute bottom-5 right-5 rounded-full bg-black/45 px-3 py-1.5 text-[10px] font-semibold text-white/85 backdrop-blur">
-            0:10 INTRO
+            0:26 INTRO
           </span>
         </motion.button>
 
@@ -109,15 +104,9 @@ export function HomeVideo({
                 autoPlay
                 playsInline
                 onError={(e) => {
-                  // Primary clip failed: try the fallback host once.
+                  // Both clips are served locally; if they still fail (offline
+                  // dev server, etc.), surface the branded fallback stage.
                   const target = e.currentTarget;
-                  if (!target.dataset.fellback) {
-                    target.dataset.fellback = "1";
-                    target.src = PROMO_CLIP_FALLBACK;
-                    target.load();
-                    target.play().catch(() => {});
-                    return;
-                  }
                   target.style.display = "none";
                   const fallback = document.createElement("div");
                   fallback.className =
@@ -129,7 +118,7 @@ export function HomeVideo({
                 }}
               >
                 <source src={PROMO_CLIP} type="video/mp4" />
-                <source src={PROMO_CLIP_WEBM} type="video/webm" />
+                <source src={PROMO_CLIP_FALLBACK} type="video/mp4" />
               </video>
               <div className="flex items-center justify-between gap-3 px-5 py-4">
                 <p className="text-xs text-[#B9A6E8]">

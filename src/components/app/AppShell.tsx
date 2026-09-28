@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -36,46 +36,6 @@ const TABS: { id: TabId; label: string; icon: typeof Home }[] = [
   { id: "profile", label: "Profile", icon: UserRound },
 ];
 
-function useClock(): string {
-  const [now, setNow] = useState(() => new Date());
-  useEffect(() => {
-    const t = setInterval(() => setNow(new Date()), 15_000);
-    return () => clearInterval(t);
-  }, []);
-  return useMemo(
-    () =>
-      now.toLocaleTimeString("en-NG", { hour: "2-digit", minute: "2-digit", hour12: false }),
-    [now]
-  );
-}
-
-function StatusBar() {
-  const time = useClock();
-  return (
-    <div className="flex items-center justify-between px-5 pt-3 text-[11px] font-semibold text-white/90">
-      <span>{time}</span>
-      <div className="flex items-center gap-1.5" aria-hidden="true">
-        <svg viewBox="0 0 18 12" className="h-3 w-4 fill-current">
-          <rect x="0" y="8" width="3" height="4" rx="0.8" />
-          <rect x="4.5" y="5.5" width="3" height="6.5" rx="0.8" />
-          <rect x="9" y="3" width="3" height="9" rx="0.8" />
-          <rect x="13.5" y="0.5" width="3" height="11.5" rx="0.8" opacity="0.45" />
-        </svg>
-        <svg viewBox="0 0 16 12" className="h-3 w-4 fill-none stroke-current" strokeWidth="1.6">
-          <path d="M1 4.5a10 10 0 0 1 14 0" strokeLinecap="round" />
-          <path d="M3.5 7a6.5 6.5 0 0 1 9 0" strokeLinecap="round" />
-          <circle cx="8" cy="10" r="1.2" className="fill-current stroke-none" />
-        </svg>
-        <svg viewBox="0 0 25 12" className="h-3 w-6">
-          <rect x="0.5" y="0.5" width="21" height="11" rx="3" className="fill-none stroke-current" opacity="0.5" />
-          <rect x="2" y="2" width="15" height="8" rx="1.8" className="fill-current" />
-          <rect x="22.5" y="3.5" width="2" height="5" rx="1" className="fill-current" opacity="0.5" />
-        </svg>
-      </div>
-    </div>
-  );
-}
-
 export default function AppShell() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
@@ -104,8 +64,6 @@ export default function AppShell() {
       </div>
 
       <div className="relative flex h-[100dvh] w-full max-w-[420px] flex-col overflow-hidden bg-[#0F0515] sm:h-[min(880px,94vh)] sm:rounded-[2.6rem] sm:border sm:border-[#6B4FA1]/35 sm:shadow-phone">
-        <StatusBar />
-
         <header className="flex items-center justify-between px-5 py-3">
           <button
             type="button"
