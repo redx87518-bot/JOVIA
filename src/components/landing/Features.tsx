@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Activity, Clapperboard, Music, Share2, Zap } from "lucide-react";
 import { SectionHeading } from "@/components/SectionHeading";
+import { ActivityImage } from "@/components/ActivityImage";
 
 const FEATURES = [
   {
@@ -10,6 +11,7 @@ const FEATURES = [
     description:
       "Explore selected celebrity-video activities with countdown-based interaction.",
     accent: "#FFD700",
+    image: "/images/hero-celebrity.jpg",
     emoji: "🎬",
     reward: "₦10,000 / hour watched",
   },
@@ -20,6 +22,7 @@ const FEATURES = [
     description:
       "Jump into supported games and time-based challenges that pay per completed session.",
     accent: "#6B4FA1",
+    image: "/images/jovia-games-preview.jpg",
     emoji: "🎮",
     reward: "Up to ₦3,000 / 60 sec",
   },
@@ -30,6 +33,7 @@ const FEATURES = [
     description:
       "JOVIA is building strategic partnerships with singers, artists, producers, and music creators to bring exciting digital experiences to our growing community.",
     accent: "#2EFF00",
+    image: "/images/icon-spotify.jpg",
     emoji: "🎧",
     reward: "₦1,500 / listening",
   },
@@ -40,6 +44,7 @@ const FEATURES = [
     description:
       "Participate in supported social activities such as sharing and engaging with content.",
     accent: "#B9A6E8",
+    image: "/images/hero-meta.jpg",
     emoji: "🚀",
     reward: "₦1,500 / view · ₦500 / engagement",
   },
@@ -70,12 +75,12 @@ export function Features() {
               style={{ background: f.accent }}
             />
             <div className="flex items-start justify-between">
-              <span
-                className="flex h-14 w-14 items-center justify-center rounded-2xl text-2xl"
-                style={{ background: `${f.accent}1f`, border: `1px solid ${f.accent}45` }}
-              >
-                {f.emoji}
-              </span>
+              <ActivityImage
+                src={f.image}
+                emoji={f.emoji}
+                alt={f.title}
+                className="h-14 w-14 rounded-2xl ring-1"
+              />
               <span
                 className="font-display text-4xl font-extrabold opacity-25"
                 style={{ color: f.accent }}

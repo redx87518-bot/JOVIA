@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatNaira, cn } from "@/lib/utils";
 import { useStore } from "@/lib/store-context";
+import { ActivityImage } from "@/components/ActivityImage";
 import type { SessionActivity } from "../EarningSession";
 
 interface MarketProps {
@@ -104,9 +105,12 @@ export default function Market({ onStartSession }: MarketProps) {
             key={a.id}
             className="flex items-center gap-3.5 rounded-2xl border border-[#6B4FA1]/30 bg-[#1c0b38]/60 p-3.5 transition-all hover:border-[#FFD700]/40"
           >
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#2D1B4E] to-[#16032f] text-xl ring-1 ring-[#6B4FA1]/40">
-              {a.emoji}
-            </span>
+            <ActivityImage
+              src={a.image}
+              emoji={a.emoji}
+              alt=""
+              className="h-12 w-12 shrink-0 rounded-2xl ring-1 ring-[#6B4FA1]/40"
+            />
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <p className="truncate text-sm font-bold text-white">{a.title}</p>

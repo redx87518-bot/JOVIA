@@ -26,7 +26,7 @@ const BANNERS = [
     from: "#2D1B4E",
     to: "#16032f",
     accent: "#FFD700",
-    emoji: "🛡️",
+    image: "/images/hero-cac.jpg",
     tag: "CAC Registered",
   },
   {
@@ -37,7 +37,7 @@ const BANNERS = [
     from: "#3b2364",
     to: "#1c0b38",
     accent: "#1DB954",
-    emoji: "🎧",
+    image: "/images/hero-music.jpg",
     tag: "Spotify · Audiomack · Boomplay",
   },
   {
@@ -48,7 +48,7 @@ const BANNERS = [
     from: "#1c0b38",
     to: "#16032f",
     accent: "#2EFF00",
-    emoji: "🌐",
+    image: "/images/hero-meta.jpg",
     tag: "Social earning",
   },
 ];

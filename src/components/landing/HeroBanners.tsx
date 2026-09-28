@@ -11,7 +11,7 @@ export interface Banner {
   from: string;
   to: string;
   accent: string;
-  emoji: string;
+  image: string;
   tag: string;
 }
 
@@ -40,13 +40,13 @@ export function HeroBanners({ banner, index, count, onSelect }: HeroBannersProps
             className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full blur-3xl"
             style={{ background: `${banner.accent}22` }}
           />
-          <div className="relative flex flex-col items-start gap-5 md:flex-row md:items-center md:justify-between">
+          <div className="relative flex flex-col items-start gap-5 md:flex-row md:items-center md:justify-between md:gap-8">
             <div className="max-w-2xl">
               <span
                 className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.16em]"
                 style={{ background: `${banner.accent}1f`, color: banner.accent }}
               >
-                {banner.emoji} {banner.tag}
+                {banner.tag}
               </span>
               <h2 className="mt-3 font-display text-2xl font-extrabold leading-tight text-white sm:text-4xl">
                 {banner.title}
@@ -55,11 +55,34 @@ export function HeroBanners({ banner, index, count, onSelect }: HeroBannersProps
                 {banner.body}
               </p>
             </div>
-            <Link to={banner.href} className="shrink-0">
-              <span className="btn-gold inline-flex items-center gap-2">
-                {banner.cta} <ArrowRight className="h-4 w-4" />
-              </span>
-            </Link>
+            <div className="flex w-full items-center justify-between gap-4 md:w-auto">
+              <Link to={banner.href} className="shrink-0">
+                <span className="btn-gold inline-flex items-center gap-2">
+                  {banner.cta} <ArrowRight className="h-4 w-4" />
+                </span>
+              </Link>
+              {/* Extracted campaign image from joviapltform.site */}
+              <div
+                className="relative h-20 w-28 shrink-0 overflow-hidden rounded-2xl ring-1 ring-white/20 sm:h-24 sm:w-36 md:h-32 md:w-44 lg:h-36 lg:w-52"
+                style={{ background: banner.to }}
+              >
+                <img
+                  src={banner.image}
+                  alt=""
+                  aria-hidden="true"
+                  loading="lazy"
+                  draggable={false}
+                  className="h-full w-full object-cover"
+                />
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-0"
+                  style={{
+                    background: `linear-gradient(120deg, ${banner.from}80, transparent 45%)`,
+                  }}
+                />
+              </div>
+            </div>
           </div>
 
           {/* Carousel dots */}

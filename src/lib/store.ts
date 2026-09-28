@@ -72,6 +72,7 @@ export interface Activity {
   durationSeconds: number;
   accent: string;
   emoji: string;
+  image: string;
 }
 
 export interface EarningSessionRecord {
@@ -155,6 +156,7 @@ export const ACTIVITIES: Activity[] = [
     durationSeconds: 180,
     accent: "#FFD700",
     emoji: "📺",
+    image: "/images/jovia-games-preview.jpg",
   },
   {
     id: "a_videos_celebrity",
@@ -167,6 +169,7 @@ export const ACTIVITIES: Activity[] = [
     durationSeconds: 300,
     accent: "#FFD700",
     emoji: "🎬",
+    image: "/images/jovia-celebrity-preview.jpg",
   },
   {
     id: "a_games_temple",
@@ -179,6 +182,7 @@ export const ACTIVITIES: Activity[] = [
     durationSeconds: 60,
     accent: "#6B4FA1",
     emoji: "🏃",
+    image: "/images/icon-temple-run.jpg",
   },
   {
     id: "a_games_subway",
@@ -191,6 +195,7 @@ export const ACTIVITIES: Activity[] = [
     durationSeconds: 60,
     accent: "#6B4FA1",
     emoji: "🛹",
+    image: "/images/icon-subway-surfers.jpg",
   },
   {
     id: "a_games_dream",
@@ -203,6 +208,7 @@ export const ACTIVITIES: Activity[] = [
     durationSeconds: 60,
     accent: "#6B4FA1",
     emoji: "⚽",
+    image: "/images/icon-dream-league.jpg",
   },
   {
     id: "a_social_status",
@@ -215,6 +221,7 @@ export const ACTIVITIES: Activity[] = [
     durationSeconds: 90,
     accent: "#2EFF00",
     emoji: "🟢",
+    image: "/images/icon-whatsapp.jpg",
   },
   {
     id: "a_social_chat",
@@ -227,6 +234,7 @@ export const ACTIVITIES: Activity[] = [
     durationSeconds: 120,
     accent: "#2EFF00",
     emoji: "💬",
+    image: "/images/hero-meta.jpg",
   },
   {
     id: "a_music_spotify",
@@ -239,6 +247,7 @@ export const ACTIVITIES: Activity[] = [
     durationSeconds: 240,
     accent: "#1DB954",
     emoji: "🎧",
+    image: "/images/icon-spotify.jpg",
   },
   {
     id: "a_music_klofeshe",
@@ -251,6 +260,7 @@ export const ACTIVITIES: Activity[] = [
     durationSeconds: 240,
     accent: "#1DB954",
     emoji: "🎵",
+    image: "/images/cover-kilofeshe.jpg",
   },
 ];
 

@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { Play, Sparkles, X } from "lucide-react";
+import { Play, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
    hotlink or CORS restrictions. */
 const PROMO_CLIP = "/videos/jovia-games.mp4";
 const PROMO_CLIP_FALLBACK = "/videos/jovia-celebrity.mp4";
+const PROMO_POSTER = "/images/jovia-games-preview.jpg";
 
 export function HomeVideo({
   open,
@@ -32,24 +33,29 @@ export function HomeVideo({
           className="group relative block aspect-video w-full overflow-hidden rounded-3xl border border-[#FFD700]/30 text-left shadow-[0_40px_90px_-40px_rgba(107,79,161,0.7)]"
           style={{ background: "linear-gradient(140deg, #2D1B4E, #16032f)" }}
         >
-          {/* Animated stage */}
+          {/* Real promo poster extracted from joviapltform.site */}
+          <img
+            src={PROMO_POSTER}
+            alt=""
+            aria-hidden="true"
+            draggable={false}
+            className="absolute inset-0 h-full w-full object-cover object-top opacity-80"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#16032f] via-[#16032f]/55 to-transparent" />
           <div className="absolute inset-0 animate-pulse-glow bg-[radial-gradient(circle_at_50%_35%,rgba(255,215,0,0.2),transparent_60%)]" />
           <div className="absolute left-6 top-6 flex items-center gap-2.5">
-            <span className="font-display text-sm font-extrabold tracking-wide text-white">
+            <span className="font-display text-sm font-extrabold tracking-wide text-white drop-shadow">
               JOVIA <span className="text-[#FFD700]">NETWORK</span>
             </span>
           </div>
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
+          <div className="absolute inset-0 flex flex-col items-center justify-end gap-4 pb-10 sm:items-center sm:justify-center sm:pb-0">
             <motion.span
               animate={{ scale: [1, 1.08, 1] }}
               transition={{ repeat: Infinity, duration: 3 }}
-              className="text-6xl"
+              className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#FFD700] drop-shadow"
             >
-              🎥
+              Watch how Jovia works
             </motion.span>
-            <p className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.3em] text-[#FFD700]">
-              <Sparkles className="h-3.5 w-3.5" /> Watch how Jovia works
-            </p>
             <span className="flex h-16 w-16 items-center justify-center rounded-full bg-[#FFD700] text-[#16032f] shadow-2xl transition-transform duration-300 group-hover:scale-110">
               <Play className="ml-1 h-7 w-7" fill="currentColor" />
             </span>
@@ -87,7 +93,7 @@ export function HomeVideo({
             >
               <div className="flex items-center justify-between border-b border-[#6B4FA1]/30 px-5 py-3.5">
                 <p className="text-sm font-bold text-white">
-                  🎥 Jovia Network — Introduction
+                  Jovia Network — Introduction
                 </p>
                 <button
                   type="button"
@@ -113,7 +119,7 @@ export function HomeVideo({
                     "flex aspect-video w-full flex-col items-center justify-center gap-3";
                   fallback.style.background = "linear-gradient(140deg, #2D1B4E, #16032f)";
                   fallback.innerHTML =
-                    '<span style="font-size:3rem">🎥</span><span style="color:#FFD700;font-weight:700;letter-spacing:0.3em;font-size:11px">PREVIEW UNAVAILABLE OFFLINE</span>';
+                    '<span style="color:#FFD700;font-weight:700;letter-spacing:0.3em;font-size:11px">PREVIEW UNAVAILABLE OFFLINE</span>';
                   target.parentElement?.appendChild(fallback);
                 }}
               >
