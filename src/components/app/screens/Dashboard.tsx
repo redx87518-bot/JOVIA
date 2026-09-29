@@ -175,8 +175,8 @@ export default function Dashboard({ onGoWallet, onGoTasks }: DashboardProps) {
 
       {!active && (
         <p className="rounded-2xl border border-[#6B4FA1]/30 bg-[#16032f]/60 p-4 text-xs leading-relaxed text-[#B9A6E8]">
-          Demo mode: activation and rewards run entirely in your browser — no real payment is
-          processed.
+          Activation is a one-time payment to Jovia's Opay account. After paying, tap "I've made
+          payment" and our Telegram support confirms your account.
         </p>
       )}
     </div>

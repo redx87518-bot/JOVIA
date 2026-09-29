@@ -47,7 +47,12 @@ interface StoreContextValue {
   version: number;
   actions: {
     signIn: (email: string, password: string) => void;
-    signUp: (name: string, email: string, password: string) => void;
+    signUp: (
+      name: string,
+      email: string,
+      password: string,
+      plan: "silver" | "gold" | null
+    ) => void;
     signOut: () => void;
     updateUsername: (username: string) => void;
     beginActivation: (plan: "silver" | "gold") => { reference: string; amount: number };
@@ -101,8 +106,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         signIn(email, password);
         bump();
       },
-      signUp: (name: string, email: string, password: string) => {
-        signUp(name, email, password);
+      signUp: (
+        name: string,
+        email: string,
+        password: string,
+        plan: "silver" | "gold" | null
+      ) => {
+        signUp(name, email, password, plan);
         bump();
       },
       signOut: () => {

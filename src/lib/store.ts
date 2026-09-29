@@ -282,7 +282,12 @@ export function getCurrentUser(): Omit<JoviaUser, "passwordHash"> | null {
   return found ? publicUser(found) : null;
 }
 
-export function signUp(name: string, email: string, password: string): JoviaUser {
+export function signUp(
+  name: string,
+  email: string,
+  password: string,
+  plan: "silver" | "gold" | null = null
+): JoviaUser {
   const users = read<JoviaUser[]>(USERS_KEY, []);
   const normalized = email.trim().toLowerCase();
   if (users.some((u) => u.email === normalized)) {
@@ -296,7 +301,9 @@ export function signUp(name: string, email: string, password: string): JoviaUser
     name: name.trim(),
     email: normalized,
     username: name.trim().split(" ")[0] || normalized.split("@")[0],
-    plan: "none",
+    // The plan picked at signup is remembered so the activation flow can
+    // reference it (e.g. in the prefilled Telegram message) before payment.
+    plan: plan ?? "none",
     activationStatus: "awaiting_payment",
     balance: 0,
     totalEarned: 0,
@@ -385,6 +392,46 @@ export function confirmActivation(
 
   addTransaction(userId, "activation", `Jovia ${plan === "gold" ? "Gold" : "Silver"} activation`, `Reference ${reference}`, -PLAN_PRICES[plan]);
   pushNotification(userId, "Account activated 🎉", `Welcome to Jovia ${plan === "gold" ? "Gold" : "Silver"}! All activities are now unlocked.`);
+}
+
+/* ------------------------------------------------------------------ */
+/* Activation payment details & Telegram handoff                       */
+/* ------------------------------------------------------------------ */
+
+/** Members pay the one-time activation fee into this account. */
+export const PAYMENT_ACCOUNT = {
+  bankName: "Opay",
+  accountNumber: "8149947771",
+  accountName: "Suleman Kasim",
+} as const;
+
+/** Jovia support on Telegram — activation payments are confirmed here. */
+export const TELEGRAM_SUPPORT_URL = "https://t.me/Jovia_Limited";
+
+export function planLabel(plan: "silver" | "gold"): string {
+  return plan === "gold" ? "Jovia Gold (₦15,000)" : "Jovia Silver (₦9,000)";
+}
+
+/**
+ * Prefilled message for Jovia support on Telegram: the activation notice
+ * followed by the plan and every signup detail — except the password.
+ */
+export function buildActivationMessage(
+  user: Pick<JoviaUser, "name" | "email" | "username">,
+  plan: "silver" | "gold",
+  reference: string
+): string {
+  const label = planLabel(plan);
+  return [
+    `Jovia support I've made an activational payment of ${label}`,
+    "",
+    `Name: ${user.name}`,
+    `Email: ${user.email}`,
+    `Username: ${user.username}`,
+    `Plan: ${label}`,
+    `Amount: ₦${(PLAN_PRICES[plan] / 100).toLocaleString("en-NG")}`,
+    `Reference: ${reference}`,
+  ].join("\n");
 }
 
 /* ------------------------------------------------------------------ */

@@ -6,9 +6,11 @@ import {
   Check,
   ChevronDown,
   Copy,
+  Landmark,
   Loader2,
   MessageCircle,
   Search,
+  Send,
   ShieldCheck,
   TrendingDown,
   TrendingUp,
@@ -21,10 +23,48 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatNaira, timeAgo } from "@/lib/utils";
 import { resolveAccountName, searchBanks } from "@/lib/banks";
+import {
+  buildActivationMessage,
+  PAYMENT_ACCOUNT,
+  TELEGRAM_SUPPORT_URL,
+} from "@/lib/store";
 import { useStore } from "@/lib/store-context";
 import { cn } from "@/lib/utils";
 
 type Step = "choose" | "generating" | "pay" | "success";
+
+function CopyRow({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+  return (
+    <div className="flex items-center justify-between rounded-xl border border-[#6B4FA1]/30 bg-[#16032f]/70 px-3 py-2.5">
+      <div className="min-w-0">
+        <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#8f80b8]">{label}</p>
+        <p
+          className={cn(
+            "truncate text-sm font-bold text-white",
+            mono && "font-mono tracking-wide text-[#FFD700]"
+          )}
+        >
+          {value}
+        </p>
+      </div>
+      <button
+        type="button"
+        aria-label={`Copy ${label}`}
+        onClick={() => {
+          navigator.clipboard
+            ?.writeText(value)
+            .then(
+              () => toast.success(`${label} copied`),
+              () => toast.error("Could not copy")
+            );
+        }}
+        className="ml-3 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#FFD700]/15 text-[#FFD700]"
+      >
+        <Copy className="h-3.5 w-3.5" />
+      </button>
+    </div>
+  );
+}
 
 function ActivationSection() {
   const { user, actions } = useStore();
@@ -72,18 +112,27 @@ function ActivationSection() {
     }
   }
 
-  async function handleConfirm() {
-    if (!reference) return;
-    setBusy(true);
+  function handleMadePayment() {
+    if (!reference || !user) return;
+    const message = buildActivationMessage(user, selectedPlan, reference);
+    // Best-effort clipboard copy — some Telegram clients do not prefill drafts.
     try {
-      await new Promise((r) => setTimeout(r, 600));
-      actions.confirmActivation(selectedPlan, reference);
-      setStep("success");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not confirm payment");
-    } finally {
-      setBusy(false);
+      navigator.clipboard?.writeText(message);
+    } catch {
+      // ignore
     }
+    window.open(
+      `${TELEGRAM_SUPPORT_URL}?text=${encodeURIComponent(message)}`,
+      "_blank",
+      "noopener,noreferrer"
+    );
+    try {
+      actions.confirmActivation(selectedPlan, reference);
+    } catch {
+      // ignore — the Telegram confirmation is the source of truth
+    }
+    setStep("success");
+    toast.success("Opening Telegram with your payment details…");
   }
 
   return (
@@ -93,7 +142,7 @@ function ActivationSection() {
       </p>
       <h3 className="mt-1.5 font-display text-xl font-bold text-white">Activate your account</h3>
       <p className="mt-1 text-sm text-[#B9A6E8]">
-        Complete your account activation using the normal JOVIA payment flow.
+        Pay your one-time activation fee, then notify Jovia support on Telegram.
       </p>
 
       {step === "choose" && (
@@ -145,18 +194,33 @@ function ActivationSection() {
                 Amount due
               </p>
               <span className="rounded-md bg-[#FFD700]/12 px-2 py-0.5 text-[10px] font-bold text-[#FFD700]">
-                Demo mode
+                {selectedPlan === "gold" ? "Jovia Gold" : "Jovia Silver"}
               </span>
             </div>
             <p className="mt-1 font-display text-3xl font-extrabold text-white">
               {formatNaira(amount)}
             </p>
-            <div className="mt-3 flex items-center justify-between rounded-xl border border-dashed border-[#FFD700]/40 bg-[#FFD700]/[0.05] px-3 py-2.5">
-              <div>
+
+            <div className="mt-3 rounded-xl border border-[#FFD700]/40 bg-[#FFD700]/[0.05] p-3">
+              <div className="flex items-center gap-2 px-1">
+                <Landmark className="h-4 w-4 text-[#FFD700]" />
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#FFD700]">
+                  Transfer to {PAYMENT_ACCOUNT.bankName}
+                </p>
+              </div>
+              <div className="mt-2 flex flex-col gap-2">
+                <CopyRow label="Bank" value={PAYMENT_ACCOUNT.bankName} />
+                <CopyRow label="Account number" value={PAYMENT_ACCOUNT.accountNumber} mono />
+                <CopyRow label="Account name" value={PAYMENT_ACCOUNT.accountName} />
+              </div>
+            </div>
+
+            <div className="mt-2 flex items-center justify-between rounded-xl border border-dashed border-[#FFD700]/40 bg-[#FFD700]/[0.05] px-3 py-2.5">
+              <div className="min-w-0">
                 <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#8f80b8]">
                   Payment reference
                 </p>
-                <p className="font-mono text-sm font-bold text-[#FFD700]">{reference}</p>
+                <p className="truncate font-mono text-sm font-bold text-[#FFD700]">{reference}</p>
               </div>
               <button
                 type="button"
@@ -167,19 +231,20 @@ function ActivationSection() {
                     () => toast.error("Could not copy")
                   );
                 }}
-                className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#FFD700]/15 text-[#FFD700]"
+                className="ml-3 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#FFD700]/15 text-[#FFD700]"
               >
                 <Copy className="h-3.5 w-3.5" />
               </button>
             </div>
+
             <p className="mt-3 text-[11px] leading-relaxed text-[#8f80b8]">
-              Demo activation — no real payment is processed. Confirm to unlock all activities
-              instantly.
+              Transfer the exact amount, then tap the button below — Telegram opens with your
+              signup details and plan prefilled for Jovia support to confirm your activation.
             </p>
           </div>
-          <Button onClick={handleConfirm} disabled={busy} className="w-full gap-2" size="lg">
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-            I have completed payment
+          <Button onClick={handleMadePayment} className="w-full gap-2" size="lg">
+            <Send className="h-4 w-4" />
+            I've made payment
           </Button>
         </div>
       )}
@@ -187,10 +252,10 @@ function ActivationSection() {
       {step === "success" && (
         <div className="mt-4 rounded-2xl border border-[#2EFF00]/40 bg-[#2EFF00]/[0.07] p-5 text-center">
           <BadgeCheck className="mx-auto h-10 w-10 text-[#2EFF00]" />
-          <p className="mt-2 font-display text-lg font-bold text-white">Account activated 🎉</p>
-          <p className="mt-1 text-xs text-[#B9A6E8]">
-            Welcome to Jovia {selectedPlan === "gold" ? "Gold" : "Silver"}. Every activity is now
-            unlocked.
+          <p className="mt-2 font-display text-lg font-bold text-white">Payment submitted 🎉</p>
+          <p className="mt-1 text-xs leading-relaxed text-[#B9A6E8]">
+            Telegram opened with your details for Jovia support. Every activity is unlocked while
+            our team confirms your {selectedPlan === "gold" ? "Gold" : "Silver"} payment.
           </p>
         </div>
       )}
