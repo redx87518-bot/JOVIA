@@ -10,48 +10,48 @@ store in `localStorage`).
 
 ## Deploying to Deno Deploy
 
-The repo ships a ready-to-use Deno Deploy entrypoint (`serve.ts`) that serves the Vite
-build output (`dist/`) with SPA fallback, correct MIME types (mp4 videos, woff2 fonts)
-and cache headers. Deno Deploy cannot serve static files by itself — that's why a bare
-deployment previously showed nothing.
+This repo ships `serve.ts`, a Deno Deploy entrypoint that serves the Vite build output
+(`dist/`) with SPA fallback, correct MIME types (mp4, woff2…) and caching. **The built
+site (`dist/`) is also committed to the repository**, so the deployment works even if
+the build step is skipped or misconfigured.
 
 ### Option A — GitHub integration (recommended)
 
-1. Push this repo to GitHub (already done — `main` is up to date).
-2. Go to <https://github.com/apps/deno-deploy> or open
-   <https://dash.deno.com/new> → **GitHub repo** flow:
-   - Select the **JOVIA** repository and the `main` branch.
-   - **Build command:** `deno task build` (runs `npm run build` → `dist/`)
+1. Open <https://dash.deno.com/new> → **Deploy from GitHub** → select the **JOVIA**
+   repository, branch `main`.
+2. Use exactly these settings:
+   - **Build command:** `deno task build` *(optional — `dist/` is committed, so the
+     site deploys even with this left empty)*
    - **Entrypoint:** `serve.ts`
-3. Click **Link** and wait for the first deployment — the app will be live at
-   `https://<project>.deno.dev`.
+3. Click **Link**. Wait for the build to finish, then open
+   `https://<your-project>.deno.dev`.
+
+> **Already linked the repo?** Deno Deploy redeploys on every push to `main`. Open the
+> project → **Deployments** → **Redeploy** on the latest one after merging changes.
 
 ### Option B — deployctl CLI
 
 ```bash
-# One-time
 deno install -Arf jsr:@deno/deployctl
-
-# Build then deploy
-deno task build
-deployctl deploy --project=jovia --entrypoint=serve.ts --prod
+deployctl deploy --project=<name> --entrypoint=serve.ts --prod
 ```
 
 ### Verify after deploying
 
 ```bash
-curl -sS -o /dev/null -w "%{http_code}\n" https://<project>.deno.dev/                 # 200
-curl -sS https://<project>.deno.dev/app | grep -q 'id="root"' && echo "SPA fallback OK"
-curl -sS -o /prem dev/null -w "%{http_code} %{content_type}\n" https://<project>.deno.dev/videos/jovia-games.mp4
+curl -sS -o /dev/null -w "%{http_code}\n" https://<your-project>.deno.dev/           # 200
+curl -sS https://<your-project>.deno.dev/app | grep -q 'id="root"' && echo "SPA OK"
+curl -sSI https://<your-project>.deno.dev/videos/jovia-games.mp4 | head -1           # 200 + video/mp4
 ```
 
-### Why it showed blank before
+### Troubleshooting a blank page
 
-A Vite SPA is just static files in `dist/`. Deno Deploy only runs code — with no
-entrypoint to map requests to `dist/`, every request 404'd (or served an empty page)
-because there was nothing to serve `index.html`, the hashed `assets/*.js` bundle, or
-the `/videos` and `/images` media. `serve.ts` fixes this: static file serving with
-SPA fallback, correct Content-Types, and immutable caching for fingerprinted assets.
+- **"This deployment has not finished building yet"** — the entrypoint isn't `serve.ts`,
+  or the linked branch isn't `main`. Fix the settings and redeploy.
+- **404 / empty responses on every path** — the entrypoint is missing. Set
+  **Entrypoint:** `serve.ts`.
+- **Check the build log** (Deployments → latest → Build Logs). If the build failed but
+  `dist/` is committed, the site still serves — report the log if anything else breaks.
 
 ---
 
@@ -59,7 +59,7 @@ SPA fallback, correct Content-Types, and immutable caching for fingerprinted ass
 
 ```bash
 npm install
-npm run dev      # Vite dev server (Freebuff preview uses this)
-npm run build    # production build into dist/
-deno task smoke  # one-shot check of the Deno entrypoint against dist/
+npm run dev        # Vite dev server (Freebuff preview uses this)
+npm run build      # production build into dist/ (also committed for Deno Deploy)
+deno task smoke    # one-shot check of the Deno entrypoint against dist/
 ```
