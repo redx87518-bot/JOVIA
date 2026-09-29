@@ -50,7 +50,7 @@ export default function Auth() {
     setLoading(true);
     try {
       if (isSignup) {
-        actions.signUp(name, email, password);
+        actions.signUp(name, email, password, plan);
         toast.success("Welcome to Jovia!");
       } else {
         actions.signIn(email, password);
