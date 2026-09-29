@@ -10,48 +10,59 @@ store in `localStorage`).
 
 ## Deploying to Deno Deploy
 
-This repo ships `serve.ts`, a Deno Deploy entrypoint that serves the Vite build output
-(`dist/`) with SPA fallback, correct MIME types (mp4, woff2…) and caching. **The built
-site (`dist/`) is also committed to the repository**, so the deployment works even if
-the build step is skipped or misconfigured.
+This repo is configured **entirely from source** via the `deploy` key in `deno.json`.
+Deno Deploy reads this file on every GitHub build, so there is **nothing to configure
+in the dashboard** — no entrypoint, no build command fields. The app deploys as a
+native **static site** with SPA mode enabled:
+
+- **Install:** `npm install`
+- **Build:** `npm run build` (Vite → `dist/`)
+- **Runtime:** static, serving `./dist` with `spa: true` (unknown paths serve
+  `index.html`, so `/app`, `/auth` and every client route work on refresh)
+
+The built `dist/` folder is also committed to the repository, so even a build-less
+deploy still serves a working site.
 
 ### Option A — GitHub integration (recommended)
 
 1. Open <https://dash.deno.com/new> → **Deploy from GitHub** → select the **JOVIA**
    repository, branch `main`.
-2. Use exactly these settings:
-   - **Build command:** `deno task build` *(optional — `dist/` is committed, so the
-     site deploys even with this left empty)*
-   - **Entrypoint:** `serve.ts`
+2. Leave all settings as detected (build command, entrypoint etc. come from
+   `deno.json`). If the dashboard asks for an app directory, use the repository root.
 3. Click **Link**. Wait for the build to finish, then open
    `https://<your-project>.deno.dev`.
 
 > **Already linked the repo?** Deno Deploy redeploys on every push to `main`. Open the
-> project → **Deployments** → **Redeploy** on the latest one after merging changes.
+> project → **Builds** → **Deploy Default Branch** after merging changes. Since the
+> configuration lives in `deno.json`, a fresh build automatically picks it up.
 
-### Option B — deployctl CLI
+### Option B — CLI
 
 ```bash
 deno install -Arf jsr:@deno/deployctl
-deployctl deploy --project=<name> --entrypoint=serve.ts --prod
+deployctl deploy --prod
 ```
+
+deployctl reads the same `deploy` key from `deno.json`.
 
 ### Verify after deploying
 
 ```bash
-curl -sS -o /dev/null -w "%{http_code}\n" https://<your-project>.deno.dev/           # 200
+curl -sS -o /dev/null -w "%{http_code}\n" https://<your-project>.deno.dev/   # 200
 curl -sS https://<your-project>.deno.dev/app | grep -q 'id="root"' && echo "SPA OK"
-curl -sSI https://<your-project>.deno.dev/videos/jovia-games.mp4 | head -1           # 200 + video/mp4
+curl -sS -o /dev/null -w "%{content_type}\n" https://<your-project>.deno.dev/videos/jovia-games.mp4  # video/mp4
 ```
 
-### Troubleshooting a blank page
+### Troubleshooting
 
-- **"This deployment has not finished building yet"** — the entrypoint isn't `serve.ts`,
-  or the linked branch isn't `main`. Fix the settings and redeploy.
-- **404 / empty responses on every path** — the entrypoint is missing. Set
-  **Entrypoint:** `serve.ts`.
-- **Check the build log** (Deployments → latest → Build Logs). If the build failed but
-  `dist/` is committed, the site still serves — report the log if anything else breaks.
+- **White/blank page** — check the build page on Deno Deploy: it must be a **static**
+  runtime pointing at `dist`. If the dashboard shows a dynamic entrypoint from an old
+  configuration, delete the app and re-link the repository (the `deploy` key in
+  `deno.json` will then take over).
+- **Build failed** — open **Build Logs** on the build page. If `dist/` is committed,
+  the site still serves the committed build even when the build step fails.
+- **404 on `/app` or `/auth`** — SPA mode is off. It is set by `spa: true` in
+  `deno.json`; make sure the dashboard did not override the source configuration.
 
 ---
 
@@ -61,5 +72,16 @@ curl -sSI https://<your-project>.deno.dev/videos/jovia-games.mp4 | head -1      
 npm install
 npm run dev        # Vite dev server (Freebuff preview uses this)
 npm run build      # production build into dist/ (also committed for Deno Deploy)
-deno task smoke    # one-shot check of the Deno entrypoint against dist/
+deno task check    # verify dist/ is complete before deploying
+```
+
+## Committing a fresh build
+
+`dist/` is gitignored but intentionally committed so the deployment is
+self-sufficient. After changing the app:
+
+```bash
+npm run build
+git add -f dist/
+git commit -m "Rebuild dist/"
 ```
